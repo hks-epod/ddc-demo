@@ -1,0 +1,24 @@
+# Data #
+########
+*.xls*
+*.doc*
+*.png
+*.jpg
+*.dta
+*.csv
+*.dbf
+*.log
+*.json
+*.txt
+*.shp*
+*.cpg
+*.prj
+*.xml
+*.shx
+*.sbn
+*.sbx
+
+# Because GitHub told me so #
+#############################
+*.zip
+.DS_Store
