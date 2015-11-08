@@ -2,7 +2,7 @@
 <html>
 <meta charset="utf-8">
 <head>
-<title>Hourly Line</title>
+<title>Pollution demo</title>
 <!-- <script src="assets/libraries/d3.v3.min.js"></script> -->
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script src="assets/libraries/queue.v1.min.js"></script>
@@ -28,7 +28,7 @@ body {
 
 .line {
   fill: none;
-  /*stroke: black;*/
+  stroke: black;
   stroke-width: 1.5px;
 }
 .winter path {
@@ -86,8 +86,6 @@ body {
 //DATA PROCESSING FUNCTIONS
 function processData(d, i) { 
 
-	console.log("In processData.")
-
 	function deString(d) {
 		if (d==="") {
 			return NaN;
@@ -95,32 +93,18 @@ function processData(d, i) {
 			return +d;
 		}
 	}
+
+	var format = d3.time.format("%Y-%m-%d %X");
+
 	var array = {
-		parameter:d.aqi_parameter,
-		nh3_aqi:deString(d.nh3_aqi),
-		co_aqi:deString(d.co_aqi),
-		no2_aqi:deString(d.no2_aqi),
-		o3_aqi:deString(d.o3_aqi),
-		pm10_aqi:deString(d.pm10_aqi),
-		pm25_aqi:deString(d.pm25_aqi),
-		so2_aqi:deString(d.so2_aqi),
-		good_l:deString(d.good_l),
-		sat_l:deString(d.sat_l),
-		mod_l:deString(d.mod_l),
-		poor_l:deString(d.poor_l),
-		vpoor_l:deString(d.vpoor_l),
-		sev_l:deString(d.sev_l),
-		good_h:deString(d.good_h),
-		sat_h:deString(d.sat_h),
-		mod_h:deString(d.mod_h),
-		poor_h:deString(d.poor_h),
-		vpoor_h:deString(d.vpoor_h),
-		sev_h:deString(d.sev_h),
-		hour:deString(d.n),
-		aqi:deString(d.aqi)
+		station: d.station,
+		date: format.parse(d.dt_clean),
+		pm25_aqi: deString(d.pm25_aqi),
+		pm25_aqi_ins: deString(d.pm25_aqi_ins)
 	};
 	return array;
 }
+
 //THE DATA QUEUE
 // queue()
 // 	.defer(d3.csv, "assets/data/aqi_hourly_spring_ihbas.csv", processData)
@@ -130,12 +114,83 @@ function processData(d, i) {
 // SKETCHBOOK
 
 function sketchBook(observations) {
-	console.log("In sketchBook.")
-}
+	console.log("In sketchBook.");
 
+	console.table(observations.slice(0,10));
+
+	// Following Eric's lead on sizing stuff
+	var chartSize = {
+		width: 600,
+		height: 400
+	};
+	var chartGap = 20;
+
+	var margin = {top: 100, right: 30, bottom: 100, left: 50};
+
+	var svg = d3.select("body").append("svg")
+	    .attr("width", chartSize.width + margin.left + margin.right)
+	    .attr("height", chartSize.height + margin.top + margin.bottom)
+
+	svg.append('text')
+		.attr('x', 35)
+		.attr('y', 70)
+		.attr('class','title')
+		.text('Predicting pollution');
+
+	// I tell myself this is because we have an EPoD standard CSS. :) 
+	svg.append('text')
+		.attr('x', 35)
+		.attr('y', 50)
+		.attr('class','subtitle')
+		.text('A demo by EPoD')
+
+
+	svg.append('text')
+		.attr('x', 35)
+		.attr('y',chartSize.height+50)
+		.attr('class','legend-label')
+		.text('Actual vs. predicted, for August 2015.')
+
+
+	var bandColors = ['rgb(165,0,38)','rgb(215,48,39)','rgb(244,109,67)','rgb(253,174,97)','rgb(166,217,106)','rgb(26,152,80)'];
+	var bandLabels = ['Severe','Very Poor','Poor','Moderate','Satisfactory','Good']
+	bandColors.reverse();
+	bandLabels.reverse();
+	var cutoffs = [0,50,100,200,300,400,500];
+	var parameters = ['Ammonia','Carbon Monoxide','Nitrogen Dioxide','Particulate Matter 2.5','Sulfur Dioxide'];
+	var paramDict = {
+		'Ammonia':'nh3_aqi',
+		'Carbon Monoxide':'co_aqi',
+		'Nitrogen Dioxide':'no2_aqi',
+		'Particulate Matter 2.5':'pm25_aqi',
+		'Sulfur Dioxide':'so2_aqi'
+	}
+
+	// TODO: Pick a time range. Week? 10-days?
+	var x = d3.scale.linear()
+    	.range([0, chartSize.width]);
+
+	var y = d3.scale.linear()
+	    .range([chartSize.height, 0]);
+
+	x.domain(d3.extent(observations, function(d) { return d.date; }));
+	y.domain(d3.extent(observations, function(d) { return d.pm25_aqi; }));
+
+	console.log(d3.extent(observations, function(d) { return d.date; }));
+	console.log(d3.extent(observations, function(d) { return d.pm25_aqi; }));
+
+	var line = d3.svg.line()
+	    .x(function(d) { return x(d.date); })
+	    .y(function(d) { return y(d.pm25_aqi); });
+
+	svg.append("path")
+		.datum(observations)
+		.attr("class", "line")
+		.attr("d", line);	
+
+} //sketchBook
 
 d3.csv("data-cleaning/august_pm25.csv", processData, sketchBook)
-
 
 //THE FUNCTION THAT CALLS THE OTHER DRAW FUNCTIONS
 function ready(error,spring,winter) {
