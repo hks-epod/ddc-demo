@@ -9,8 +9,10 @@ ddc-demo: Predicting, visualizing Delhi air pollution
 * [AirNow (US Gov)](http://www.airnow.gov/)
 * [SAFAR - India](http://safar.tropmet.res.in/index.php?menu_id=1)
 * [An example of linked vizi](https://shanthi54.github.io/cs171-project-dbs-mexico/)
-* [Using tooltips to find x-values on a line chart](http://bl.ocks.org/mbostock/3902569)
+* [Mike Bostock: Using tooltips to find x-values on a line chart](http://bl.ocks.org/mbostock/3902569)
+* [Mike Bostock: Multi-series line chart](http://bl.ocks.org/mbostock/3884955)
 * [Air quality prediction hackathon winning model](https://github.com/benhamner/Air-Quality-Prediction-Hackathon-Winning-Model)
+
 
 
 ### TODO
@@ -22,11 +24,14 @@ ddc-demo: Predicting, visualizing Delhi air pollution
    * ~~Template: IndiaSpend.~~
    * Tooltips?
    * Why the weird line restart?
+     * Different stations?
    * chart `g`?
    * Generate some example predictions.
    * Restrict time range.
    * ~~Move chart down a bit/some styling.~~
    * ~~Axes.~~
+   * Merge: Average of all stations, or just most reliable? Or most conservative estimate?
+   * Unmerged: stations, unmerged. 
 4. Heat map of pollution around each of the 11 monitors. Which monitors are broken? Which have constant data?
   * TopoJSON?
   * Get a map of Delhi up, dots for stations.

@@ -147,9 +147,15 @@ function processData(d, i) {
 function sketchBook(observations) {
 	console.log("In sketchBook.");
 
+	var nested_data = d3.nest()
+						.key(function(d) { return d.station })
+						.entries(observations);
+
 	console.table(observations.slice(0,10));
 
-	// Following Eric's lead on sizing stuff
+	console.table(nested_data.slice(0,10));
+
+
 	var chartSize = {
 		width: 600,
 		height: 400
@@ -174,7 +180,6 @@ function sketchBook(observations) {
 		.attr('class','title')
 		.text('Predicting pollution');
 
-	// I tell myself this is because we have an EPoD standard CSS. :) 
 	panel.append('text')
 		.attr('x', 35)
 		.attr('y', 50)
@@ -188,19 +193,19 @@ function sketchBook(observations) {
 		.text('Actual vs. predicted, for August 2015.')
 
 
-	var bandColors = ['rgb(165,0,38)','rgb(215,48,39)','rgb(244,109,67)','rgb(253,174,97)','rgb(166,217,106)','rgb(26,152,80)'];
-	var bandLabels = ['Severe','Very Poor','Poor','Moderate','Satisfactory','Good']
-	bandColors.reverse();
-	bandLabels.reverse();
-	var cutoffs = [0,50,100,200,300,400,500];
-	var parameters = ['Ammonia','Carbon Monoxide','Nitrogen Dioxide','Particulate Matter 2.5','Sulfur Dioxide'];
-	var paramDict = {
-		'Ammonia':'nh3_aqi',
-		'Carbon Monoxide':'co_aqi',
-		'Nitrogen Dioxide':'no2_aqi',
-		'Particulate Matter 2.5':'pm25_aqi',
-		'Sulfur Dioxide':'so2_aqi'
-	}
+	// var bandColors = ['rgb(165,0,38)','rgb(215,48,39)','rgb(244,109,67)','rgb(253,174,97)','rgb(166,217,106)','rgb(26,152,80)'];
+	// var bandLabels = ['Severe','Very Poor','Poor','Moderate','Satisfactory','Good']
+	// bandColors.reverse();
+	// bandLabels.reverse();
+	// var cutoffs = [0,50,100,200,300,400,500];
+	// var parameters = ['Ammonia','Carbon Monoxide','Nitrogen Dioxide','Particulate Matter 2.5','Sulfur Dioxide'];
+	// var paramDict = {
+	// 	'Ammonia':'nh3_aqi',
+	// 	'Carbon Monoxide':'co_aqi',
+	// 	'Nitrogen Dioxide':'no2_aqi',
+	// 	'Particulate Matter 2.5':'pm25_aqi',
+	// 	'Sulfur Dioxide':'so2_aqi'
+	// }
 
 	// TODO: Pick a time range. Week? 10-days?
 	var x = d3.time.scale()
@@ -216,12 +221,16 @@ function sketchBook(observations) {
 	    .x(function(d) { return x(d.date); })
 	    .y(function(d) { return y(d.pm25_aqi); });
 
-	panel.append("path")
-		.datum(observations)
-		.attr("class", "line")
-		.attr("d", line)
-		.on("mousemove", mouseover)
-		.on("mouseout", mouseout);
+
+	var station = svg.selectAll(".station")
+	      .data(nested_data)
+	    .enter().append("g")
+	      .attr("class", "station");
+
+	station.append("path")
+	  .attr("class", "line")
+	  .attr("d", function(d) { return line(d.values); })
+	  .style("stroke", "blue");
 
 	var xAxis = d3.svg.axis()
 	    .scale(x)
