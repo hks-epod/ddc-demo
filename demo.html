@@ -91,28 +91,28 @@ body {
 
 <script>
 
-function mouseover(d) {
-	console.log(d3.select(this));
+// function mouseover(d) {
+// 	console.log(d3.select(this));
 
-	var mousecoord = [0,0];
-	mousecoord = d3.mouse(this);
+// 	var mousecoord = [0,0];
+// 	mousecoord = d3.mouse(this);
 
-	d3.select("#tooltip")
-		.style("left", mousecoord[0]+25 + "px")
-		.style("top", mousecoord[1]-75 + "px");
+// 	d3.select("#tooltip")
+// 		.style("left", mousecoord[0]+25 + "px")
+// 		.style("top", mousecoord[1]-75 + "px");
 
-	d3.select("#station")
-		.text(d.station);
+// 	d3.select("#station")
+// 		.text(d.station);
 
-	d3.select("#PM25")
-		.text(d.pm25_aqi);
+// 	d3.select("#PM25")
+// 		.text(d.pm25_aqi);
 	   
-	d3.select("#tooltip").classed("hidden", false);
-};
+// 	d3.select("#tooltip").classed("hidden", false);
+// };
 
-function mouseout(d) {
-	d3.select("#tooltip").classed("hidden", true);
-};
+// function mouseout(d) {
+// 	d3.select("#tooltip").classed("hidden", true);
+// };
 
 //DATA PROCESSING FUNCTIONS
 function processData(d, i) { 
@@ -151,10 +151,9 @@ function sketchBook(observations) {
 						.key(function(d) { return d.station })
 						.entries(observations);
 
-	console.table(observations.slice(0,10));
-
-	console.table(nested_data.slice(0,10));
-
+	// console.table(observations.slice(0,10));
+	// console.table(nested_data.slice(0,10));
+	console.log(nested_data);
 
 	var chartSize = {
 		width: 600,
@@ -163,6 +162,9 @@ function sketchBook(observations) {
 	var chartGap = 20;
 
 	var margin = {top: 100, right: 30, bottom: 100, left: 50};
+
+	var color = d3.scale.category10();
+	var bisectDate = d3.bisector(function(d) { return d.date; }).left;
 
 	var svg = d3.select("body").append("svg")
 	    .attr("width", chartSize.width + margin.left + margin.right)
@@ -221,16 +223,40 @@ function sketchBook(observations) {
 	    .x(function(d) { return x(d.date); })
 	    .y(function(d) { return y(d.pm25_aqi); });
 
+	var focus = svg.append("g")
+		.attr("class", "focus")
+		.style("display", "none");
+
+  focus.append("circle")
+      .attr("r", 4.5);
+
+  focus.append("text")
+      .attr("x", 9)
+      .attr("dy", ".35em");
+
+  function mousemove(d) {
+    var x0 = x.invert(d3.mouse(this)[0]),
+        i = bisectDate(d.values, x0, 1),
+        d0 = d.values[i - 1],
+        d1 = d.values[i],
+        d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+    focus.attr("transform", "translate(" + x(d.date) + "," + y(d.pm25_aqi) + ")");
+    focus.select("text").text(d.pm25_aqi);
+  }
 
 	var station = svg.selectAll(".station")
 	      .data(nested_data)
 	    .enter().append("g")
-	      .attr("class", "station");
+	      .attr("class", "station")
+	      .attr('class', function(d) { return d.key; });
 
 	station.append("path")
 	  .attr("class", "line")
 	  .attr("d", function(d) { return line(d.values); })
-	  .style("stroke", "blue");
+	  .style("stroke", function(d) { return color(d.key); })
+	  .on("mouseover", function() { focus.style("display", null); })
+      .on("mouseout", function() { focus.style("display", "none"); })
+      .on("mousemove", mousemove);
 
 	var xAxis = d3.svg.axis()
 	    .scale(x)
@@ -250,12 +276,14 @@ function sketchBook(observations) {
 	      .attr("y", 6)
 	      .attr("dy", ".71em")
 	      .style("text-anchor", "end")
-	      .text("Price ($)");
+	      .text("Particulate matter 2.5");
 
 	panel.append("g")
 	      .attr("class", "x axis")
 	      .attr("transform", "translate(0," + chartSize.height + ")")
 	      .call(xAxis);
+
+	// debugger;
 
 } //sketchBook
 

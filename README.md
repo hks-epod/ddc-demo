@@ -23,15 +23,14 @@ ddc-demo: Predicting, visualizing Delhi air pollution
    * ~~`aqi_data_old.dta` to two `.csvs`: full data, only PM2.5 (`aqi_pm25.csv`).~~
    * ~~Template: IndiaSpend.~~
    * Tooltips?
-   * Why the weird line restart?
-     * Different stations?
+   * ~~Why the weird line restart?~~
    * chart `g`?
    * Generate some example predictions.
    * Restrict time range.
    * ~~Move chart down a bit/some styling.~~
    * ~~Axes.~~
    * Merge: Average of all stations, or just most reliable? Or most conservative estimate?
-   * Unmerged: stations, unmerged. 
+   * Color the stations. 
 4. Heat map of pollution around each of the 11 monitors. Which monitors are broken? Which have constant data?
   * TopoJSON?
   * Get a map of Delhi up, dots for stations.
