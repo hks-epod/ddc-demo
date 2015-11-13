@@ -5,7 +5,6 @@
 <title>Pollution demo</title>
 <!-- <script src="assets/libraries/d3.v3.min.js"></script> -->
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-<script src="assets/libraries/queue.v1.min.js"></script>
 
 <style>
 
@@ -150,7 +149,14 @@ function sketchBook(observations) {
 	var nested_data = d3.nest()
 						.key(function(d) { return d.station })
 						.entries(observations);
-	
+
+	best_station = []
+
+	nested_data.forEach(function(d) {
+		if (d.key=="Anand Vihar") {
+			best_station.push(d);
+		}
+	})
 
 	// console.table(observations.slice(0,10));
 	// console.table(nested_data.slice(0,10));
@@ -180,13 +186,13 @@ function sketchBook(observations) {
 	// TITLE, SUBTITLE AND CAPTION
 	panel.append('text')
 		.attr('x', 35)
-		.attr('y', 70)
+		.attr('y', 20)
 		.attr('class','title')
 		.text('Predicting pollution');
 
 	panel.append('text')
 		.attr('x', 35)
-		.attr('y', 50)
+		.attr('y', 40)
 		.attr('class','subtitle')
 		.text('A demo by EPoD')
 
@@ -229,11 +235,16 @@ function sketchBook(observations) {
         d1 = d.values[i],
         d = x0 - d0.date > d1.date - x0 ? d1 : d0;
     focus.attr("transform", "translate(" + x(d.date) + "," + y(d.pm25_aqi) + ")");
-    focus.select("text").text(d.pm25_aqi);
+    
+    focus.select("text")
+    	.text(function() {
+    		return d.station + ", " + d3.round(d.pm25_aqi, 1);
+		});
+
   }
 
 	var station = svg.selectAll(".station")
-	      .data(nested_data)
+	      .data(best_station)
 	    .enter().append("g")
 	      .attr("class", "station")
 	      .attr('class', function(d) { return d.key; });

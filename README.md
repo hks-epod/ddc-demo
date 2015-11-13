@@ -23,9 +23,9 @@ ddc-demo: Predicting, visualizing Delhi air pollution
    * ~~`aqi_data_old.dta` to two `.csvs`: full data, only PM2.5 (`aqi_pm25.csv`).~~
    * ~~Template: IndiaSpend.~~
    * ~~Tooltips?~~
-   * Style tooltips.
+   * ~~Style tooltips.~~
    * ~~Why the weird line restart?~~
-   * chart `g`?
+   * ~~chart `g`?~~
    * Generate some example predictions.
    * Restrict time range.
    * Check `margins` and how they're working for the axes and the line charts?
