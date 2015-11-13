@@ -150,32 +150,34 @@ function sketchBook(observations) {
 	var nested_data = d3.nest()
 						.key(function(d) { return d.station })
 						.entries(observations);
+	
 
 	// console.table(observations.slice(0,10));
 	// console.table(nested_data.slice(0,10));
-	console.log(nested_data);
+	// console.log(nested_data);
+
+	var margin = {top: 50, right: 30, bottom: 20, left: 30};
 
 	var chartSize = {
-		width: 600,
-		height: 400
+		width: 600 - margin.left - margin.right,
+		height: 400 - margin.top - margin.bottom
 	};
-	var chartGap = 20;
-
-	var margin = {top: 100, right: 30, bottom: 100, left: 50};
 
 	var color = d3.scale.category10();
 	var bisectDate = d3.bisector(function(d) { return d.date; }).left;
 
 	var svg = d3.select("body").append("svg")
 	    .attr("width", chartSize.width + margin.left + margin.right)
-	    .attr("height", chartSize.height + margin.top + margin.bottom);
+	    .attr("height", chartSize.height + margin.top + margin.bottom)
+	    .append("g")
+	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 	var panel = svg
 	  	.append("g")
 	  	.attr("width", chartSize.width)
-	    .attr("height", chartSize.height)
-	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	    .attr("height", chartSize.height);
 
+	// TITLE, SUBTITLE AND CAPTION
 	panel.append('text')
 		.attr('x', 35)
 		.attr('y', 70)
@@ -194,30 +196,16 @@ function sketchBook(observations) {
 		.attr('class','legend-label')
 		.text('Actual vs. predicted, for August 2015.')
 
-
-	// var bandColors = ['rgb(165,0,38)','rgb(215,48,39)','rgb(244,109,67)','rgb(253,174,97)','rgb(166,217,106)','rgb(26,152,80)'];
-	// var bandLabels = ['Severe','Very Poor','Poor','Moderate','Satisfactory','Good']
-	// bandColors.reverse();
-	// bandLabels.reverse();
-	// var cutoffs = [0,50,100,200,300,400,500];
-	// var parameters = ['Ammonia','Carbon Monoxide','Nitrogen Dioxide','Particulate Matter 2.5','Sulfur Dioxide'];
-	// var paramDict = {
-	// 	'Ammonia':'nh3_aqi',
-	// 	'Carbon Monoxide':'co_aqi',
-	// 	'Nitrogen Dioxide':'no2_aqi',
-	// 	'Particulate Matter 2.5':'pm25_aqi',
-	// 	'Sulfur Dioxide':'so2_aqi'
-	// }
-
+	// SCALES
 	// TODO: Pick a time range. Week? 10-days?
 	var x = d3.time.scale()
     	.range([0, chartSize.width]);
-
 	var y = d3.scale.linear()
 	    .range([chartSize.height, 0]);
 
 	x.domain(d3.extent(observations, function(d) { return d.date; }));
 	y.domain(d3.extent(observations, function(d) { return d.pm25_aqi; }));
+
 
 	var line = d3.svg.line()
 	    .x(function(d) { return x(d.date); })
@@ -227,12 +215,12 @@ function sketchBook(observations) {
 		.attr("class", "focus")
 		.style("display", "none");
 
-  focus.append("circle")
-      .attr("r", 4.5);
+	  focus.append("circle")
+	      .attr("r", 4.5);
 
-  focus.append("text")
-      .attr("x", 9)
-      .attr("dy", ".35em");
+	  focus.append("text")
+	      .attr("x", 9)
+	      .attr("dy", ".35em");
 
   function mousemove(d) {
     var x0 = x.invert(d3.mouse(this)[0]),
