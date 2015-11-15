@@ -17,6 +17,7 @@
 *.shx
 *.sbn
 *.sbx
+*d3js*
 
 # Because GitHub told me so #
 #############################

@@ -4,12 +4,14 @@
 <head>
 <title>Pollution demo</title>
 <!-- <script src="assets/libraries/d3.v3.min.js"></script> -->
-<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<!-- <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script> -->
+<script src="d3js/d3.v3.min.js"></script>
 
 <style>
 
 body {
-  font: 10px sans-serif;
+	font-family: sans-serif;
+	font-size: 10px;
 }
 
 .y.axis path {
@@ -38,9 +40,7 @@ body {
 .axis-label {
 	font-size:14px;
 }
-.param-label {
-	font-size:13px;
-}
+
 .title {
 	font-size:20px;
 	font-family:'Franklin Gothic Medium';
@@ -54,23 +54,8 @@ body {
 	font-size:12px;
 }
 
-#tooltip {
-	position: absolute;
-	width: auto;
-	height: auto;
-	padding: 0px 10px;
-	background-color: white;
-	-webkit-border-radius: 10px;
-	-moz-border-radius: 10px;
-	border-radius: 10px;
-	-webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
-	-moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
-	box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
-	pointer-events: none;
-}
-
-#tooltip.hidden {
-	display: none;
+#legend {
+	font-size: 9px;
 }
 
 
@@ -80,42 +65,13 @@ body {
 <body>
 <div id="main">
 	<div id="chartContainer"></div>
-
-	<div id="tooltip" class="hidden" style="left: 429px, top: 489.6px">
-		<p><span id="station">Station</span>: <span id="PM25">50</span></p>
-	</div>
 </div>
 
 </body>
 
 <script>
 
-// function mouseover(d) {
-// 	console.log(d3.select(this));
-
-// 	var mousecoord = [0,0];
-// 	mousecoord = d3.mouse(this);
-
-// 	d3.select("#tooltip")
-// 		.style("left", mousecoord[0]+25 + "px")
-// 		.style("top", mousecoord[1]-75 + "px");
-
-// 	d3.select("#station")
-// 		.text(d.station);
-
-// 	d3.select("#PM25")
-// 		.text(d.pm25_aqi);
-	   
-// 	d3.select("#tooltip").classed("hidden", false);
-// };
-
-// function mouseout(d) {
-// 	d3.select("#tooltip").classed("hidden", true);
-// };
-
-//DATA PROCESSING FUNCTIONS
-function processData(d, i) { 
-
+function processData(d) {
 	function deString(d) {
 		if (d==="") {
 			return NaN;
@@ -123,9 +79,7 @@ function processData(d, i) {
 			return +d;
 		}
 	}
-
 	var format = d3.time.format("%Y-%m-%d %X");
-
 	var array = {
 		station: d.station,
 		date: format.parse(d.dt_clean),
@@ -135,42 +89,57 @@ function processData(d, i) {
 	return array;
 }
 
-//THE DATA QUEUE
-// queue()
-// 	.defer(d3.csv, "assets/data/aqi_hourly_spring_ihbas.csv", processData)
-// 	.defer(d3.csv, "assets/data/aqi_hourly_winter_ihbas.csv", processData)
-// 	.await(ready);
-
 
 // SKETCHBOOK
 function sketchBook(observations) {
 	console.log("In sketchBook.");
 
+	// MAKING A SIMPLE TOOLTIP
+	function mousemove(d) {
+		var x0 = x.invert(d3.mouse(this)[0]),
+			i = bisectDate(d.values, x0, 1),
+			d0 = d.values[i - 1],
+			d1 = d.values[i],
+			d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+		focus.attr("transform", "translate(" + x(d.date) + "," + y(d.pm25_aqi) + ")");
+
+		focus.select("text")
+			.text(function() {
+				// return d.station + ", " + d3.round(d.pm25_aqi, 1) + ", " + timeLabels(d.date);
+				return timeLabels(d.date) + ", " + d3.round(d.pm25_aqi, 1);
+			});
+
+		focus.select("circle")
+			.attr("fill", color(d.station)); //Station color consistency = ~**MAGIC**~
+	}
+
+	// PREPARING THE DATA
 	var nested_data = d3.nest()
 						.key(function(d) { return d.station })
 						.entries(observations);
-
 	best_station = []
-
 	nested_data.forEach(function(d) {
-		if (d.key=="Anand Vihar") {
+		if (d.key=="Anand Vihar" || d.key=="Shadipur") {
 			best_station.push(d);
 		}
 	})
-
 	// console.table(observations.slice(0,10));
 	// console.table(nested_data.slice(0,10));
 	// console.log(nested_data);
 
+
+	// PREPARING THE CANVAS
 	var margin = {top: 50, right: 30, bottom: 20, left: 30};
+	var padding = 10; 
 
 	var chartSize = {
-		width: 600 - margin.left - margin.right,
+		width: 800 - margin.left - margin.right,
 		height: 400 - margin.top - margin.bottom
 	};
 
 	var color = d3.scale.category10();
 	var bisectDate = d3.bisector(function(d) { return d.date; }).left;
+	var timeLabels = d3.time.format("%b %d %I:%M%p"); 
 
 	var svg = d3.select("body").append("svg")
 	    .attr("width", chartSize.width + margin.left + margin.right)
@@ -181,38 +150,39 @@ function sketchBook(observations) {
 	var panel = svg
 	  	.append("g")
 	  	.attr("width", chartSize.width)
-	    .attr("height", chartSize.height);
+	    .attr("height", chartSize.height)
+	    .attr("id", "panel");
 
 	// TITLE, SUBTITLE AND CAPTION
 	panel.append('text')
-		.attr('x', 35)
+		.attr('x', chartSize.width - 200)
 		.attr('y', 20)
 		.attr('class','title')
 		.text('Predicting pollution');
 
 	panel.append('text')
-		.attr('x', 35)
+		.attr('x', chartSize.width - 200)
 		.attr('y', 40)
 		.attr('class','subtitle')
-		.text('A demo by EPoD')
+		.text('A demo by EPoD');
 
-	panel.append('text')
+	svg.append('text')
 		.attr('x', 35)
-		.attr('y',chartSize.height + 50)
+		.attr('y',chartSize.height + 40)
 		.attr('class','legend-label')
-		.text('Actual vs. predicted, for August 2015.')
+		.text('Actual vs. predicted, for August 2015.');
 
 	// SCALES
-	// TODO: Pick a time range. Week? 10-days?
 	var x = d3.time.scale()
-    	.range([0, chartSize.width]);
+    	.range([padding, chartSize.width - padding*11]);
 	var y = d3.scale.linear()
-	    .range([chartSize.height, 0]);
+	    .range([chartSize.height - padding, padding]);
 
 	x.domain(d3.extent(observations, function(d) { return d.date; }));
 	y.domain(d3.extent(observations, function(d) { return d.pm25_aqi; }));
 
 
+	// LINES AND TOOLTIPS
 	var line = d3.svg.line()
 	    .x(function(d) { return x(d.date); })
 	    .y(function(d) { return y(d.pm25_aqi); });
@@ -222,41 +192,30 @@ function sketchBook(observations) {
 		.style("display", "none");
 
 	  focus.append("circle")
-	      .attr("r", 4.5);
+	      .attr("r", 5);
 
 	  focus.append("text")
 	      .attr("x", 9)
+	      .attr("class", "line-label")
 	      .attr("dy", ".35em");
 
-  function mousemove(d) {
-    var x0 = x.invert(d3.mouse(this)[0]),
-        i = bisectDate(d.values, x0, 1),
-        d0 = d.values[i - 1],
-        d1 = d.values[i],
-        d = x0 - d0.date > d1.date - x0 ? d1 : d0;
-    focus.attr("transform", "translate(" + x(d.date) + "," + y(d.pm25_aqi) + ")");
-    
-    focus.select("text")
-    	.text(function() {
-    		return d.station + ", " + d3.round(d.pm25_aqi, 1);
-		});
-
-  }
-
+	// DRAWING LINE(S)
 	var station = svg.selectAll(".station")
 	      .data(best_station)
 	    .enter().append("g")
 	      .attr("class", "station")
-	      .attr('class', function(d) { return d.key; });
+	      .attr('class', function(d) { return d.key;});
 
 	station.append("path")
 	  .attr("class", "line")
 	  .attr("d", function(d) { return line(d.values); })
 	  .style("stroke", function(d) { return color(d.key); })
+	  .style("stroke-width", "2px") //TODO: Make this a function(d) for predictions, based on the diff between error charts.
 	  .on("mouseover", function() { focus.style("display", null); })
       .on("mouseout", function() { focus.style("display", "none"); })
       .on("mousemove", mousemove);
 
+    // DRAWING AXES
 	var xAxis = d3.svg.axis()
 	    .scale(x)
 	    .orient("bottom")
@@ -282,11 +241,39 @@ function sketchBook(observations) {
 	      .attr("transform", "translate(0," + chartSize.height + ")")
 	      .call(xAxis);
 
+
+	// LEGEND
+	var legend = svg.append("g")
+		.attr("id", "legend");
+
+	legend.selectAll("circle")
+		.data(best_station)
+		.enter()
+		.append("circle")
+		.attr("r", "3px")
+		.attr("cx", chartSize.width - 197)
+		.attr("cy", function(d, i) {
+			return 60 + i*10;
+		})
+		.attr("fill", function(d) { return color(d.key) });
+
+	legend.selectAll("text")
+		.data(best_station)
+		.enter()
+		.append("text")
+		.attr('x', chartSize.width - 190)
+		.attr('y', function(d, i) {
+			return 64 + i*10;
+		})
+		.text(function(d) { return d.key; }); 
+
 	// debugger;
 
 } //sketchBook
 
-d3.csv("data-cleaning/august_pm25.csv", processData, sketchBook)
+// RUNNING THE VIZ
+// d3.csv("data-cleaning/august_pm25.csv", sketchBook);
+d3.csv("data-cleaning/august_pm25.csv", processData, sketchBook);
 
 
 </script>
