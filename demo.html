@@ -119,7 +119,7 @@ function sketchBook(observations) {
 						.entries(observations);
 	best_station = []
 	nested_data.forEach(function(d) {
-		if (d.key=="Anand Vihar" || d.key=="Shadipur") {
+		if (d.key=="Anand Vihar" || d.key=="Shadipur") { //TODO: Change to "Predictions once they're in there"
 			best_station.push(d);
 		}
 	})
@@ -210,7 +210,13 @@ function sketchBook(observations) {
 	  .attr("class", "line")
 	  .attr("d", function(d) { return line(d.values); })
 	  .style("stroke", function(d) { return color(d.key); })
-	  .style("stroke-width", "2px") //TODO: Make this a function(d) for predictions, based on the diff between error charts.
+	  .style("stroke-width", function(d) {
+	  	if (d.key != "Predictions") {
+	  		return "2px";
+	  	} else {
+	  		return d.upper - d.lower + "px";
+	  	}
+	  }) //TODO: Change col names to whatever it'll actually be.
 	  .on("mouseover", function() { focus.style("display", null); })
       .on("mouseout", function() { focus.style("display", "none"); })
       .on("mousemove", mousemove);
