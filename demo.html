@@ -3,9 +3,8 @@
 <meta charset="utf-8">
 <head>
 <title>Pollution demo</title>
-<!-- <script src="assets/libraries/d3.v3.min.js"></script> -->
-<!-- <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script> -->
-<script src="d3js/d3.v3.min.js"></script>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<!-- <script src="d3js/d3.v3.min.js"></script> -->
 
 <style>
 
@@ -63,14 +62,11 @@ body {
 </head>
 
 <body>
-<div id="main">
-	<div id="chartContainer"></div>
-</div>
-
 </body>
 
 <script>
 
+// SOME PRE-PROCESSING OF THE DATA (DESTRINGING, ETC.)
 function processData(d) {
 	function deString(d) {
 		if (d==="") {
@@ -105,7 +101,6 @@ function sketchBook(observations) {
 
 		focus.select("text")
 			.text(function() {
-				// return d.station + ", " + d3.round(d.pm25_aqi, 1) + ", " + timeLabels(d.date);
 				return timeLabels(d.date) + ", " + d3.round(d.pm25_aqi, 1);
 			});
 
@@ -119,7 +114,7 @@ function sketchBook(observations) {
 						.entries(observations);
 	best_station = []
 	nested_data.forEach(function(d) {
-		if (d.key=="Anand Vihar" || d.key=="Shadipur") { //TODO: Change to "Predictions once they're in there"
+		if (d.key=="Anand Vihar" || d.key=="Shadipur") { //TODO: Change to "Predictions" once they're in there
 			best_station.push(d);
 		}
 	})
@@ -130,7 +125,7 @@ function sketchBook(observations) {
 
 	// PREPARING THE CANVAS
 	var margin = {top: 50, right: 30, bottom: 20, left: 30};
-	var padding = 10; 
+	var padding = 25; 
 
 	var chartSize = {
 		width: 800 - margin.left - margin.right,
@@ -151,7 +146,9 @@ function sketchBook(observations) {
 	  	.append("g")
 	  	.attr("width", chartSize.width)
 	    .attr("height", chartSize.height)
+	    .attr("transform", "translate(" + padding + ", " + 0 + ")")
 	    .attr("id", "panel");
+
 
 	// TITLE, SUBTITLE AND CAPTION
 	panel.append('text')
@@ -172,6 +169,7 @@ function sketchBook(observations) {
 		.attr('class','legend-label')
 		.text('Actual vs. predicted, for August 2015.');
 
+
 	// SCALES
 	var x = d3.time.scale()
     	.range([padding, chartSize.width - padding*11]);
@@ -187,7 +185,7 @@ function sketchBook(observations) {
 	    .x(function(d) { return x(d.date); })
 	    .y(function(d) { return y(d.pm25_aqi); });
 
-	var focus = svg.append("g")
+	var focus = panel.append("g")
 		.attr("class", "focus")
 		.style("display", "none");
 
@@ -199,8 +197,9 @@ function sketchBook(observations) {
 	      .attr("class", "line-label")
 	      .attr("dy", ".35em");
 
+
 	// DRAWING LINE(S)
-	var station = svg.selectAll(".station")
+	var station = panel.selectAll(".station")
 	      .data(best_station)
 	    .enter().append("g")
 	      .attr("class", "station")
@@ -214,19 +213,40 @@ function sketchBook(observations) {
 	  	if (d.key != "Predictions") {
 	  		return "2px";
 	  	} else {
-	  		return d.upper - d.lower + "px";
+	  		return d.upper - d.lower + "px"; //TODO: Change col names to whatever it'll actually be.
 	  	}
-	  }) //TODO: Change col names to whatever it'll actually be.
+	  }) 
 	  .on("mouseover", function() { focus.style("display", null); })
       .on("mouseout", function() { focus.style("display", "none"); })
       .on("mousemove", mousemove);
 
-    // DRAWING AXES
+
+    // AXES
 	var xAxis = d3.svg.axis()
 	    .scale(x)
 	    .orient("bottom")
 	    .ticks(7)
 	    .tickFormat(d3.time.format("%b %d"));	
+
+	panel.append("g")
+	      .attr("class", "x axis")
+	      .attr("transform", "translate(0," + chartSize.height + ")")
+	      .call(xAxis)
+	    .append("text")
+	      .attr("y", 50)
+	      .attr("dy", "1.7em");
+
+	d3.select('.x.axis')
+	  .selectAll('line')
+	  .data(x.ticks(d3.time.days.utc,1), function(d) {return d;})
+	  .enter().append('line')
+	    .attr('class', 'day-ticks')
+	    .style("stroke", "black")
+	    .style("stroke-width", "1px")
+	    .attr('y1', 0)
+	    .attr('y2', 5)
+	    .attr('x1', x)
+	    .attr('x2', x);
 
 	var yAxis = d3.svg.axis()
 	    .scale(y)
@@ -237,15 +257,11 @@ function sketchBook(observations) {
 	      .call(yAxis)
 	    .append("text")
 	      .attr("transform", "rotate(-90)")
-	      .attr("y", 6)
-	      .attr("dy", ".71em")
+	      .attr("y", -60)
+	      .attr("x", -50)
+	      .attr("dy", "1.7em")
 	      .style("text-anchor", "end")
-	      .text("Particulate matter 2.5");
-
-	panel.append("g")
-	      .attr("class", "x axis")
-	      .attr("transform", "translate(0," + chartSize.height + ")")
-	      .call(xAxis);
+	      .text("P.M. 2.5 Air Quality");
 
 
 	// LEGEND
